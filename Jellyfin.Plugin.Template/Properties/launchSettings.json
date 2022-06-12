@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "Jellyfin.Plugin.Template": {
+      "commandName": "Project"
+    }
+  }
+}
