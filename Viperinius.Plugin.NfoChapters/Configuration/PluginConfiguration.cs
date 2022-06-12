@@ -1,6 +1,6 @@
 using MediaBrowser.Model.Plugins;
 
-namespace Jellyfin.Plugin.Template.Configuration;
+namespace Viperinius.Plugin.NfoChapters.Configuration;
 
 /// <summary>
 /// The configuration options.

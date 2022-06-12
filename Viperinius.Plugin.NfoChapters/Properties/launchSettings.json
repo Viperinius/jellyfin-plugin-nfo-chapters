@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Jellyfin.Plugin.Template": {
+    "Viperinius.Plugin.NfoChapters": {
       "commandName": "Project"
     }
   }

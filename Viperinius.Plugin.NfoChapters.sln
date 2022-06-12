@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32526.322
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Jellyfin.Plugin.Template", "Jellyfin.Plugin.Template\Jellyfin.Plugin.Template.csproj", "{D921B930-CF91-406F-ACBC-08914DCD0D34}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Viperinius.Plugin.NfoChapters", "Viperinius.Plugin.NfoChapters\Viperinius.Plugin.NfoChapters.csproj", "{D921B930-CF91-406F-ACBC-08914DCD0D34}"
 EndProject
 Project("{911E67C6-3D85-4FCE-B560-20A9C3E3FF48}") = "jellyfin", "C:\Users\PC\Downloads\jellyfin_10.8.0\jellyfin.exe", "{4CA02B31-BFF6-41CA-B626-7E9472F1C10A}"
 	ProjectSection(DebuggerProjectSystem) = preProject
