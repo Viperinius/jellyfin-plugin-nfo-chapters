@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -8,6 +8,7 @@
     <Nullable>enable</Nullable>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <CodeAnalysisRuleSet>../jellyfin.ruleset</CodeAnalysisRuleSet>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,7 +27,7 @@
     <EmbeddedResource Include="Configuration\configPage.html" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(OS)' == 'Windows_NT'">
     <Exec Command="SET jfpath=C:\Users\PC\AppData\Local\jellyfin\plugins\$(TargetName)&#xD;&#xA;if not exist &quot;%25jfpath%25&quot; mkdir &quot;%25jfpath%25&quot;&#xD;&#xA;copy /y &quot;$(TargetPath)&quot; &quot;%25jfpath%25&quot;&#xD;&#xA;copy /y &quot;$(TargetDir)$(TargetName).pdb&quot; &quot;%25jfpath%25&quot;" />
   </Target>
 
