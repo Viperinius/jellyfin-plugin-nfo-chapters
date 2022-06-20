@@ -3,22 +3,6 @@ using MediaBrowser.Model.Plugins;
 namespace Viperinius.Plugin.NfoChapters.Configuration;
 
 /// <summary>
-/// The configuration options.
-/// </summary>
-public enum SomeOptions
-{
-    /// <summary>
-    /// Option one.
-    /// </summary>
-    OneOption,
-
-    /// <summary>
-    /// Second option.
-    /// </summary>
-    AnotherOption
-}
-
-/// <summary>
 /// Plugin configuration.
 /// </summary>
 public class PluginConfiguration : BasePluginConfiguration
@@ -28,30 +12,21 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public PluginConfiguration()
     {
-        // set default options here
-        Options = SomeOptions.AnotherOption;
-        TrueFalseSetting = true;
-        AnInteger = 2;
-        AString = "string";
+        ExtractChapterImagesToPaths = false;
+        ExtractChapterImagesTask = false;
     }
 
     /// <summary>
-    /// Gets or sets a value indicating whether some true or false setting is enabled..
+    /// Gets or sets a value indicating whether to extract chapter images based on NFO chapters.<br/>
+    /// If true:<br/>
+    /// Paths in NFO can be non existent and will be created.
+    /// If false:<br/>
+    /// Paths in NFO need to exist to be used.
     /// </summary>
-    public bool TrueFalseSetting { get; set; }
+    public bool ExtractChapterImagesToPaths { get; set; }
 
     /// <summary>
-    /// Gets or sets an integer setting.
+    /// Gets or sets a value indicating whether to extract chapter images using its own scheduled task instead of running after a library scan.
     /// </summary>
-    public int AnInteger { get; set; }
-
-    /// <summary>
-    /// Gets or sets a string setting.
-    /// </summary>
-    public string AString { get; set; }
-
-    /// <summary>
-    /// Gets or sets an enum option.
-    /// </summary>
-    public SomeOptions Options { get; set; }
+    public bool ExtractChapterImagesTask { get; set; }
 }

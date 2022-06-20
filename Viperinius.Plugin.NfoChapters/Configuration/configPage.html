@@ -2,36 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Template</title>
+    <title>NFO Chapters</title>
 </head>
 <body>
-    <div id="TemplateConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+    <div id="NfoChaptersConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
         <div data-role="content">
             <div class="content-primary">
-                <form id="TemplateConfigForm">
-                    <div class="selectContainer">
-                        <label class="selectLabel" for="Options">Several Options</label>
-                        <select is="emby-select" id="Options" name="Options" class="emby-select-withcolor emby-select">
-                            <option id="optOneOption" value="OneOption">One Option</option>
-                            <option id="optAnotherOption" value="AnotherOption">Another Option</option>
-                        </select>
+                <form id="NfoChaptersConfigForm">
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h2 class="sectionTitle">NFO Chapters</h2>
                     </div>
-                    <div class="inputContainer">
-                        <label class="inputLabel inputLabelUnfocused" for="AnInteger">An Integer</label>
-                        <input id="AnInteger" name="AnInteger" type="number" is="emby-input" min="0" />
-                        <div class="fieldDescription">A Description</div>
+                    <div class="verticalSection">
+                        <p>This plugin enables the use of chapter tags in NFOs.</p>
+                        <br />
+                    </div>
+
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="ExtractChapterImagesToPaths" name="ExtractChapterImagesToPaths" type="checkbox" is="emby-checkbox" />
+                            <span>Extract chapter images and save them to the paths specified in the NFO.</span>
+                        </label>
                     </div>
                     <div class="checkboxContainer checkboxContainer-withDescription">
                         <label class="emby-checkbox-label">
-                            <input id="TrueFalseSetting" name="TrueFalseCheckBox" type="checkbox" is="emby-checkbox" />
-                            <span>A Checkbox</span>
+                            <input id="ExtractChapterImagesTask" name="ExtractChapterImagesTask" type="checkbox" is="emby-checkbox" />
+                            <span>Use a scheduled task to extract chapter images. Otherwise the extraction will be done after a library scan is finished.</span>
                         </label>
                     </div>
-                    <div class="inputContainer">
-                        <label class="inputeLabel inputLabelUnfocused" for="AString">A String</label>
-                        <input id="AString" name="AString" type="text" is="emby-input" />
-                        <div class="fieldDescription">Another Description</div>
-                    </div>
+
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -41,37 +39,33 @@
             </div>
         </div>
         <script type="text/javascript">
-            var TemplateConfig = {
+            var NfoChaptersConfig = {
                 pluginUniqueId: 'BE72D436-AB23-44B4-8625-9A8F3892D27A'
             };
 
-            document.querySelector('#TemplateConfigPage')
+            document.querySelector('#NfoChaptersConfigPage')
                 .addEventListener('pageshow', function() {
                     Dashboard.showLoadingMsg();
-                    ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
-                        document.querySelector('#Options').value = config.Options;
-                        document.querySelector('#AnInteger').value = config.AnInteger;
-                        document.querySelector('#TrueFalseSetting').checked = config.TrueFalseSetting;
-                        document.querySelector('#AString').value = config.AString;
+                    ApiClient.getPluginConfiguration(NfoChaptersConfig.pluginUniqueId).then(function (config) {
+                        document.querySelector('#ExtractChapterImagesToPaths').checked = config.ExtractChapterImagesToPaths;
+                        document.querySelector('#ExtractChapterImagesTask').checked = config.ExtractChapterImagesTask;
                         Dashboard.hideLoadingMsg();
-                    });    
-                });
-            
-            document.querySelector('#TemplateConfigForm')
-                .addEventListener('submit', function() {
-                Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(TemplateConfig.pluginUniqueId).then(function (config) {
-                    config.Options = document.querySelector('#Options').value;
-                    config.AnInteger = document.querySelector('#AnInteger').value;
-                    config.TrueFalseSetting = document.querySelector('#TrueFalseSetting').checked;
-                    config.AString = document.querySelector('#AString').value;
-                    ApiClient.updatePluginConfiguration(TemplateConfig.pluginUniqueId, config).then(function (result) {
-                        Dashboard.processPluginConfigurationUpdateResult(result);
                     });
                 });
+            
+            document.querySelector('#NfoChaptersConfigForm')
+                .addEventListener('submit', function() {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(NfoChaptersConfig.pluginUniqueId).then(function (config) {
+                        config.ExtractChapterImagesToPaths = document.querySelector('#ExtractChapterImagesToPaths').checked;
+                        config.ExtractChapterImagesTask = document.querySelector('#ExtractChapterImagesTask').checked;
+                        ApiClient.updatePluginConfiguration(NfoChaptersConfig.pluginUniqueId, config).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
+                    });
 
-                return false;
-            });
+                    return false;
+                });
         </script>
     </div>
 </body>
