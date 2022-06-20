@@ -30,10 +30,10 @@ namespace Viperinius.Plugin.NfoChapters
         /// <returns>Task.</returns>
         public Task RunAsync()
         {
-            // set logger
+            _logger.LogDebug("Entrypoint running");
 
-            // TODO: remove this again
-            _logger.LogDebug("Hello from NfoChapters!");
+            // TODO: instead of starting the chapter scanning in PostScanTask, subscribe to ILibraryManager.ItemAdded (and maybe ItemUpdated?).
+            // could look similar to https://github.com/ConfusedPolarBear/intro-skipper/blob/master/ConfusedPolarBear.Plugin.IntroSkipper/Entrypoint.cs
 
             return Task.CompletedTask;
         }
