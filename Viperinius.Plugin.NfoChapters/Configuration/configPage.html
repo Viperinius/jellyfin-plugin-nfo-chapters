@@ -25,6 +25,12 @@
                     </div>
                     <div class="checkboxContainer checkboxContainer-withDescription">
                         <label class="emby-checkbox-label">
+                            <input id="ForceReplaceChapterImages" name="ForceReplaceChapterImages" type="checkbox" is="emby-checkbox" />
+                            <span>Extract chapter images no matter if they already exist or not / delete old images before extracting them.</span>
+                        </label>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
                             <input id="ExtractChapterImagesTask" name="ExtractChapterImagesTask" type="checkbox" is="emby-checkbox" />
                             <span>Use a scheduled task to extract chapter images. Otherwise the extraction will be done after a library scan is finished.</span>
                         </label>
@@ -48,6 +54,7 @@
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(NfoChaptersConfig.pluginUniqueId).then(function (config) {
                         document.querySelector('#ExtractChapterImagesToPaths').checked = config.ExtractChapterImagesToPaths;
+                        document.querySelector('#ForceReplaceChapterImages').checked = config.ForceReplaceChapterImages;
                         document.querySelector('#ExtractChapterImagesTask').checked = config.ExtractChapterImagesTask;
                         Dashboard.hideLoadingMsg();
                     });
@@ -58,6 +65,7 @@
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(NfoChaptersConfig.pluginUniqueId).then(function (config) {
                         config.ExtractChapterImagesToPaths = document.querySelector('#ExtractChapterImagesToPaths').checked;
+                        config.ForceReplaceChapterImages = document.querySelector('#ForceReplaceChapterImages').checked;
                         config.ExtractChapterImagesTask = document.querySelector('#ExtractChapterImagesTask').checked;
                         ApiClient.updatePluginConfiguration(NfoChaptersConfig.pluginUniqueId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);

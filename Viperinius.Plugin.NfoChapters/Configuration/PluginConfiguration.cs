@@ -13,6 +13,7 @@ public class PluginConfiguration : BasePluginConfiguration
     public PluginConfiguration()
     {
         ExtractChapterImagesToPaths = false;
+        ForceReplaceChapterImages = false;
         ExtractChapterImagesTask = false;
     }
 
@@ -24,6 +25,12 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Paths in NFO need to exist to be used.
     /// </summary>
     public bool ExtractChapterImagesToPaths { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to extract images no matter if they already exist or not.
+    /// If true, deletes existing chapter images stored in the internal metadata path before extracting them again.
+    /// </summary>
+    public bool ForceReplaceChapterImages { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to extract chapter images using its own scheduled task instead of running after a library scan.
