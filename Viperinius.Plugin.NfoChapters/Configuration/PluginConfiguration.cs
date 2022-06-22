@@ -33,7 +33,7 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool ForceReplaceChapterImages { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether to extract chapter images using its own scheduled task instead of running after a library scan.
+    /// Gets or sets a value indicating whether to extract chapter images using its own scheduled task only instead of running after a library scan as well.
     /// </summary>
     public bool ExtractChapterImagesTask { get; set; }
 }
