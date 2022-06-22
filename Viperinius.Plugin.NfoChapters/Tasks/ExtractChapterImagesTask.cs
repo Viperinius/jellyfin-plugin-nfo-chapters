@@ -94,7 +94,7 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                await RunExtractionInternal(video, cancellationToken).ConfigureAwait(false);
+                await RunExtraction(video, cancellationToken).ConfigureAwait(false);
 
                 numComplete++;
                 percent = numComplete;
@@ -120,7 +120,13 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
             };*/
         }
 
-        private async Task RunExtractionInternal(Video video, CancellationToken cancellationToken)
+        /// <summary>
+        /// Run the extraction for one video.
+        /// </summary>
+        /// <param name="video">The video.</param>
+        /// <param name="cancellationToken">CancellationToken to use for operation.</param>
+        /// <returns>Task.</returns>
+        public async Task RunExtraction(Video video, CancellationToken cancellationToken)
         {
             var chapters = _itemRepository.GetChapters(video);
             var success = await RefreshChapterImages(video, chapters, true, true, cancellationToken).ConfigureAwait(false);
@@ -189,6 +195,7 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
                     {
                         if (!string.IsNullOrEmpty(chapter.ImagePath) && !string.IsNullOrEmpty(oldChapterPath))
                         {
+                            Directory.CreateDirectory(Path.GetDirectoryName(oldChapterPath)!);
                             File.Copy(chapter.ImagePath, oldChapterPath, true);
                         }
 

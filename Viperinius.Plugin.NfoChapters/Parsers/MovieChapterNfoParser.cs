@@ -11,6 +11,7 @@ using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Controller.MediaEncoding;
 using MediaBrowser.Controller.Persistence;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
@@ -25,31 +26,39 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
     public class MovieChapterNfoParser // : MovieNfoParser
     {
         private readonly ILogger _logger;
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ILibraryManager _libraryManager;
         private readonly IItemRepository _itemRepository;
         private readonly IFileSystem _fileSystem;
         private readonly IDirectoryService _directoryService;
+        private readonly IEncodingManager _encodingManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MovieChapterNfoParser"/> class.
         /// </summary>
         /// <param name="logger">Instance of the <see cref="ILogger"/> interface.</param>
+        /// <param name="loggerFactory">Instance of the <see cref="ILoggerFactory"/> interface.</param>
         /// <param name="libraryManager">Instance of the <see cref="ILibraryManager"/> interface.</param>
         /// <param name="itemRepository">Instance of the <see cref="IItemRepository"/> interface.</param>
         /// <param name="fileSystem">Instance of the <see cref="IFileSystem"/> interface.</param>
         /// <param name="directoryService">Instance of the <see cref="IDirectoryService"/> interface.</param>
+        /// <param name="encodingManager">Instance of the <see cref="IEncodingManager"/> interface.</param>
         public MovieChapterNfoParser(
             ILogger logger,
+            ILoggerFactory loggerFactory,
             ILibraryManager libraryManager,
             IItemRepository itemRepository,
             IFileSystem fileSystem,
-            IDirectoryService directoryService)
+            IDirectoryService directoryService,
+            IEncodingManager encodingManager)
         {
             _logger = logger;
+            _loggerFactory = loggerFactory;
             _libraryManager = libraryManager;
             _itemRepository = itemRepository;
             _fileSystem = fileSystem;
             _directoryService = directoryService;
+            _encodingManager = encodingManager;
         }
 
         /// <summary>
@@ -58,7 +67,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
         /// <param name="progress">The progress.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>Task.</returns>
-        public Task Run(IProgress<double> progress, CancellationToken cancellationToken)
+        public async Task Run(IProgress<double> progress, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Running the movie NFO chapter parser");
 
@@ -132,6 +141,13 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                     _logger.LogError(ex, "Error analysing NFO chapters for {Movie}", movie.Name);
                 }
 
+                // Extract images only if not supposed to be done via scheduled task
+                if ((Plugin.Instance?.Configuration.ExtractChapterImagesToPaths ?? false) && !(Plugin.Instance?.Configuration.ExtractChapterImagesTask ?? false))
+                {
+                    await new Tasks.ExtractChapterImagesTask(_loggerFactory.CreateLogger<Tasks.ExtractChapterImagesTask>(), _encodingManager, _libraryManager, _directoryService, _itemRepository, _fileSystem)
+                        .RunExtraction(movie, cancellationToken).ConfigureAwait(false);
+                }
+
                 numComplete++;
                 percent = numComplete;
                 percent /= count;
@@ -140,7 +156,6 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
             }
 
             progress.Report(100);
-            return Task.CompletedTask;
         }
 
         /// <summary>
