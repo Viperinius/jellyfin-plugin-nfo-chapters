@@ -34,6 +34,12 @@ jobs:
         id: jprm
         with:
           dotnet-target: net6.0
+
+      - name: Generate Manifest
+        shell: bash
+        run: |-
+          $(python3 ${{ github.action_path }}/jprm/__init__.py --verbosity=debug repo init ./manifest.json)
+          $(python3 ${{ github.action_path }}/jprm/__init__.py --verbosity=debug repo add ./manifest.json ${{ steps.jprm.outputs.artifact }})
         
       - name: Upload Artifact
         uses: actions/upload-artifact@v3.1.0
@@ -42,4 +48,6 @@ jobs:
           retention-days: 30
           if-no-files-found: error
           #path: Viperinius.Plugin.NfoChapters/bin/Debug/net6.0/Viperinius.Plugin.NfoChapters.dll
-          path: ${{ steps.jprm.outputs.artifact }}
+          path: |
+            ${{ steps.jprm.outputs.artifact }}
+            manifest.json
