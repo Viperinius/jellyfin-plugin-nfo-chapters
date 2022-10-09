@@ -284,6 +284,10 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                                 }
                             }
                         }
+                        else
+                        {
+                            reader.Skip();
+                        }
 
                         break;
                     }
