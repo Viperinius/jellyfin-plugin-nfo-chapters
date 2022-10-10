@@ -1,0 +1,38 @@
+name: 'Generate Manifest'
+
+inputs:
+  path:
+    required: true
+    default: './plugin.zip'
+    description: 'The path to the zip of the built plugin (default: "./plugin.zip")'
+
+outputs:
+  artifact:
+    description: 'Returns the generated manifest'
+    value: ${{ steps.build.outputs.artifact }}
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout JPRM
+      uses: actions/checkout@v3
+      with:
+        repository: oddstr13/jellyfin-plugin-repository-manager
+        path: './jprm'
+
+    - name: Setup JRPM Deps
+      shell: bash
+      run: |-
+        python3 -m pip install -r ./jprm/requirements.txt
+
+    - name: Run JPRM build
+      id: build
+      shell: bash
+      run: |-
+        echo "::group::Manifestin' away"
+                
+        python3 ./jprm/jprm/__init__.py --verbosity=debug repo init ./manifest.json
+        python3 ./jprm/jprm/__init__.py --verbosity=debug repo add ./manifest.json ${{ inputs.path }}
+        
+        echo "::set-output name=artifact::manifest.json"
+        echo "::endgroup::"
