@@ -1,4 +1,5 @@
 name: 'Generate Manifest'
+description: 'Create the manifest for a Jellyfin plugin'
 
 inputs:
   path:
