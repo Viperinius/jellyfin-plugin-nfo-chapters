@@ -39,6 +39,8 @@ jobs:
         uses: ./.github/manifest-action
         with:
           path: ${{ steps.jprm.outputs.artifact }}
+          repo-slug: ${{ github.repository }}
+          plugin-name: Viperinius.Plugin.NfoChapters
         
       - name: Upload Artifact
         uses: actions/upload-artifact@v3.1.0
