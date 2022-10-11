@@ -23,7 +23,11 @@ This can be beneficial in the following cases:
 
 ## Installation
 
-<!--TODO: add link and note to manifest!)-->
+Link to the repository manifest to get the plugin to show up in your catalogue:
+```
+https://raw.githubusercontent.com/Viperinius/jellyfin-plugins/master/manifest.json
+```
+
 [See the official documentation for install instructions](https://jellyfin.org/docs/general/server/plugins/index.html#installing).
 
 ## How to
