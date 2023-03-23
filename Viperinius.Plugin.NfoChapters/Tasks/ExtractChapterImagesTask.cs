@@ -90,6 +90,11 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
             double percent = 0;
             var count = videos.Count;
 
+            if (Plugin.Instance?.Configuration.EnableVerboseLogging ?? false)
+            {
+                _logger.LogInformation("Amount of videos found before chapter image extraction: {Count}", count);
+            }
+
             foreach (var video in videos)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -207,6 +212,17 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
                 if (changesMade)
                 {
                     _itemRepository.SaveChapters(video.Id, chapters);
+                    if (Plugin.Instance?.Configuration.EnableVerboseLogging ?? false)
+                    {
+                        _logger.LogInformation("Chapter changes were made for {Name}", video.Path);
+                    }
+                }
+            }
+            else
+            {
+                if (Plugin.Instance?.Configuration.EnableVerboseLogging ?? false)
+                {
+                    _logger.LogInformation("Internal RefreshChapterImages failed for {Name}", video.Path);
                 }
             }
 

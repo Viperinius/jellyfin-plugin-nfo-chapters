@@ -12,10 +12,16 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public PluginConfiguration()
     {
+        EnableVerboseLogging = false;
         ExtractChapterImagesToPaths = false;
         ForceReplaceChapterImages = false;
         ExtractChapterImagesTask = false;
     }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to enable verbose logging.
+    /// </summary>
+    public bool EnableVerboseLogging { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to extract chapter images based on NFO chapters.<br/>

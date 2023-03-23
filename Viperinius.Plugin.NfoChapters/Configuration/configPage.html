@@ -19,6 +19,12 @@
 
                     <div class="checkboxContainer checkboxContainer-withDescription">
                         <label class="emby-checkbox-label">
+                            <input id="EnableVerboseLogging" name="EnableVerboseLogging" type="checkbox" is="emby-checkbox" />
+                            <span>Enable verbose logging for this plugin.</span>
+                        </label>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
                             <input id="ExtractChapterImagesToPaths" name="ExtractChapterImagesToPaths" type="checkbox" is="emby-checkbox" />
                             <span>Extract chapter images and save them to the paths specified in the NFO.</span>
                         </label>
@@ -53,6 +59,7 @@
                 .addEventListener('pageshow', function() {
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(NfoChaptersConfig.pluginUniqueId).then(function (config) {
+                        document.querySelector('#EnableVerboseLogging').checked = config.EnableVerboseLogging;
                         document.querySelector('#ExtractChapterImagesToPaths').checked = config.ExtractChapterImagesToPaths;
                         document.querySelector('#ForceReplaceChapterImages').checked = config.ForceReplaceChapterImages;
                         document.querySelector('#ExtractChapterImagesTask').checked = config.ExtractChapterImagesTask;
@@ -61,9 +68,10 @@
                 });
             
             document.querySelector('#NfoChaptersConfigForm')
-                .addEventListener('submit', function() {
+                .addEventListener('submit', function(e) {
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(NfoChaptersConfig.pluginUniqueId).then(function (config) {
+                        config.EnableVerboseLogging = document.querySelector('#EnableVerboseLogging').checked;
                         config.ExtractChapterImagesToPaths = document.querySelector('#ExtractChapterImagesToPaths').checked;
                         config.ForceReplaceChapterImages = document.querySelector('#ForceReplaceChapterImages').checked;
                         config.ExtractChapterImagesTask = document.querySelector('#ExtractChapterImagesTask').checked;
@@ -72,6 +80,7 @@
                         });
                     });
 
+                    e.preventDefault();
                     return false;
                 });
         </script>
