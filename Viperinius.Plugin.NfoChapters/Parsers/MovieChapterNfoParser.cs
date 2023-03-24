@@ -103,20 +103,23 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                         continue;
                     }
 
-                    var chapters = tmpItem.Item.Chapters;
+                    // Make sure the chapters are ordered by starting point
+                    var sortedChapters = tmpItem.Item.Chapters.ToList();
+                    sortedChapters.Sort((a, b) => a.StartPositionTicks.CompareTo(b.StartPositionTicks));
+
                     var existingChapters = _itemRepository.GetChapters(movie);
                     if (existingChapters != null && existingChapters.Count > 0)
                     {
                         // Check if the NFO chapters differ from the existing ones
                         bool chaptersDiffer = false;
 
-                        if (existingChapters.Count != chapters.Count)
+                        if (existingChapters.Count != sortedChapters.Count)
                         {
                             chaptersDiffer = true;
                         }
                         else
                         {
-                            foreach (var chapter in chapters)
+                            foreach (var chapter in sortedChapters)
                             {
                                 if (!existingChapters.Where(c => (c.StartPositionTicks == chapter.StartPositionTicks) &&
                                                                  (c.Name == chapter.Name) &&
@@ -134,7 +137,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                         }
                     }
 
-                    _itemRepository.SaveChapters(movie.Id, chapters);
+                    _itemRepository.SaveChapters(movie.Id, sortedChapters);
                 }
                 catch (Exception ex)
                 {
