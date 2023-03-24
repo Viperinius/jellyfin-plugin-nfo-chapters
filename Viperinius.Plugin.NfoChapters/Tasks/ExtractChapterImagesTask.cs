@@ -154,7 +154,7 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
         public async Task<bool> RefreshChapterImages(Video video, IReadOnlyList<ChapterInfo> chapters, bool extractImages, bool saveChapters, CancellationToken cancellationToken)
         {
             // Only extract images for items that have "intended" chapters, i.e. not auto generated
-            if (AreDummyChapters(chapters))
+            if (Utils.AreDummyChapters(chapters))
             {
                 return true;
             }
@@ -227,19 +227,6 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Detect if a chapter list is likely to be a set of generated dummy chapters.
-        /// </summary>
-        /// <param name="chapters">Chapters to check.</param>
-        /// <returns><c>true</c> if chapters are dummies; otherwise, <c>false</c>.</returns>
-        protected bool AreDummyChapters(IReadOnlyList<ChapterInfo> chapters)
-        {
-            // Hardcoded value defined in MediaBrowser.Providers.MediaInfo.FFProbeVideoInfo
-            var dummyChapterDuration = TimeSpan.FromMinutes(5).Ticks;
-
-            return !chapters.Select((c, i) => c.StartPositionTicks - (i * dummyChapterDuration)).Distinct().Skip(1).Any();
         }
 
         private static string GetChapterImagesPath(Video video)
