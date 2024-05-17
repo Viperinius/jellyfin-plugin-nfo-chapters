@@ -159,7 +159,7 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
                 return true;
             }
 
-            List<string> currentChapterImagePaths = new List<string>(chapters.Select(c => c.ImagePath));
+            List<string?> currentChapterImagePaths = new List<string?>(chapters.Select(c => c.ImagePath));
 
             if (Plugin.Instance?.Configuration.ForceReplaceChapterImages ?? false)
             {

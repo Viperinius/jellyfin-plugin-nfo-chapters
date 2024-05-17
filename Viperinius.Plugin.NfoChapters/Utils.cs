@@ -7,7 +7,7 @@ using MediaBrowser.Model.Entities;
 
 namespace Viperinius.Plugin.NfoChapters
 {
-    internal class Utils
+    internal sealed class Utils
     {
         /// <summary>
         /// Detect if a chapter list is likely to be a set of generated dummy chapters.

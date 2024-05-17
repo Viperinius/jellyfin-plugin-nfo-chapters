@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Controller.Plugins;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Viperinius.Plugin.NfoChapters
@@ -11,7 +12,7 @@ namespace Viperinius.Plugin.NfoChapters
     /// <summary>
     /// Entrypoint of the server.
     /// </summary>
-    public class Entrypoint : IServerEntryPoint
+    public class Entrypoint : IHostedService
     {
         private readonly ILogger<Entrypoint> _logger;
 
@@ -24,11 +25,8 @@ namespace Viperinius.Plugin.NfoChapters
             _logger = logger;
         }
 
-        /// <summary>
-        /// Run setup.
-        /// </summary>
-        /// <returns>Task.</returns>
-        public Task RunAsync()
+        /// <inheritdoc/>
+        public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogDebug("Entrypoint running");
 
@@ -38,21 +36,10 @@ namespace Viperinius.Plugin.NfoChapters
             return Task.CompletedTask;
         }
 
-        /// <summary>
-        /// Dispose.
-        /// </summary>
-        public void Dispose()
+        /// <inheritdoc/>
+        public Task StopAsync(CancellationToken cancellationToken)
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Internal Dispose.
-        /// </summary>
-        /// <param name="dispose">Should dispose.</param>
-        protected virtual void Dispose(bool dispose)
-        {
+            return Task.CompletedTask;
         }
     }
 }

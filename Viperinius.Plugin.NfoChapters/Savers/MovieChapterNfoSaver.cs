@@ -27,6 +27,7 @@ namespace Viperinius.Plugin.NfoChapters.Savers
     /// </summary>
     public class MovieChapterNfoSaver : IMetadataFileSaver
     {
+        private static readonly string[] _MetadataSavers = new[] { "Nfo" };
         private readonly ILogger<MovieChapterNfoSaver> _logger;
         private readonly IFileSystem _fileSystem;
         private readonly IServerConfigurationManager _configurationManager;
@@ -159,7 +160,7 @@ namespace Viperinius.Plugin.NfoChapters.Savers
             var chapters = _itemRepository.GetChapters(item);
 
             // do not save auto generated dummy chapters
-            if (!chapters.Any() || Utils.AreDummyChapters(chapters))
+            if (chapters.Count == 0 || Utils.AreDummyChapters(chapters))
             {
                 return;
             }
@@ -169,7 +170,7 @@ namespace Viperinius.Plugin.NfoChapters.Savers
             if (!_fileSystem.FileExists(path))
             {
                 // try to create it with base nfo saver first
-                await _providerManager.SaveMetadataAsync(item, MinimumUpdateType, new[] { "Nfo" }).ConfigureAwait(false);
+                await _providerManager.SaveMetadataAsync(item, MinimumUpdateType, _MetadataSavers).ConfigureAwait(false);
 
                 if (!_fileSystem.FileExists(path))
                 {
@@ -230,10 +231,6 @@ namespace Viperinius.Plugin.NfoChapters.Savers
         {
             modifiedServerChapters = false;
             var chapterNodes = xmlDoc.XPathSelectElements("//chapters/chapter");
-            if (!chapterNodes.Any())
-            {
-                return false;
-            }
 
             var matchedCount = 0;
             foreach (var chapterNode in chapterNodes)
@@ -275,6 +272,11 @@ namespace Viperinius.Plugin.NfoChapters.Savers
                 }
             }
 
+            if (matchedCount == 0)
+            {
+                return false;
+            }
+
             return serverChapters.Count == matchedCount;
         }
 
@@ -297,7 +299,10 @@ namespace Viperinius.Plugin.NfoChapters.Savers
                 var elem = new XElement("chapter");
                 elem.SetAttributeValue("name", chapter.Name);
                 elem.SetAttributeValue("start", TimeSpan.FromTicks(chapter.StartPositionTicks).TotalSeconds);
-                elem.SetValue(chapter.ImagePath);
+                if (!string.IsNullOrEmpty(chapter.ImagePath))
+                {
+                    elem.SetValue(chapter.ImagePath);
+                }
 
                 chaptersNode.Add(elem);
             }
