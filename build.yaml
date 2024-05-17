@@ -2,9 +2,9 @@
 name: "NFO Chapters"
 guid: "BE72D436-AB23-44B4-8625-9A8F3892D27A"
 imageUrl: "https://github.com/Viperinius/jellyfin-plugin-nfo-chapters/raw/master/viperinius-plugin-nfochapters.png"
-version: "1.0.1.0"
-targetAbi: "10.8.4.0"
-framework: "net6.0"
+version: "1.1.0.0"
+targetAbi: "10.9.0.0"
+framework: "net8.0"
 overview: "This plugin enables the use of chapter tags in NFOs"
 description: >
   This plugin extends the NFO parser for your Movies.
@@ -15,6 +15,12 @@ artifacts:
 - "Viperinius.Plugin.NfoChapters.dll"
 changelog: |2-
   # Changelog
+
+  ## [1.1.0.0] - 2024-05-17
+
+  ### Added
+
+  - Support for Jellyfin 10.9
 
   ## [1.0.1.0] - 2023-04-01
 
