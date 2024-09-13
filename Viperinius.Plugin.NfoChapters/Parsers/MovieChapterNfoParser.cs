@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -25,6 +26,13 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
     /// </summary>
     public class MovieChapterNfoParser // : MovieNfoParser
     {
+        private static readonly string[] _chapterTimeFormats =
+        [
+            @"hh\:mm\:ss\.fffffff",
+            @"hh\:mm\:ss\.fff",
+            @"hh\:mm\:ss"
+        ];
+
         private readonly ILogger _logger;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILibraryManager _libraryManager;
@@ -343,11 +351,11 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                                     chapter.Name = name.Trim();
                                 }
 
-                                var startSecs = reader.GetAttribute("start");
-                                double parsedStartSecs;
-                                if (!string.IsNullOrWhiteSpace(startSecs) && double.TryParse(startSecs, out parsedStartSecs))
+                                var startSecs = reader.GetAttribute("start") ?? reader.GetAttribute("time");
+                                var parsedStart = ParseChapterStartTime(startSecs);
+                                if (parsedStart != null)
                                 {
-                                    chapter.StartPositionTicks = TimeSpan.FromSeconds(parsedStartSecs).Ticks;
+                                    chapter.StartPositionTicks = ((TimeSpan)parsedStart).Ticks;
                                 }
 
                                 var imagePath = reader.ReadElementContentAsString();
@@ -377,6 +385,27 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
             }
 
             return chapters;
+        }
+
+        private static TimeSpan? ParseChapterStartTime(string? raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                return null;
+            }
+
+            var colonCount = raw.Length - raw.Replace(":", string.Empty, StringComparison.InvariantCulture).Length;
+            // strictly allow only the format xx:xx:xx, not e.g. xx:xx
+            if (colonCount == 2 && TimeSpan.TryParseExact(raw, _chapterTimeFormats, CultureInfo.InvariantCulture, out var result))
+            {
+                return result;
+            }
+            else if (double.TryParse(raw, out var parsedStartSecs))
+            {
+                return TimeSpan.FromSeconds(parsedStartSecs);
+            }
+
+            return null;
         }
     }
 }
