@@ -265,8 +265,9 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                     }
                 }
             }
-            catch (XmlException)
+            catch (XmlException ex)
             {
+                _logger.LogError(ex, "Error reading chapters for {Movie} from XML {Xml}", item.Item.Name, metadataFile);
             }
         }
 
