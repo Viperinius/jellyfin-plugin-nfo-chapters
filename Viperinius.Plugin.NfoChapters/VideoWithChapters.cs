@@ -1,9 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Model.Entities;
 
@@ -28,13 +24,13 @@ namespace Viperinius.Plugin.NfoChapters
         /// <param name="video">Video to initialise from.</param>
         public VideoWithChapters(Video video) : this()
         {
-            Type t = typeof(Video);
-            foreach (FieldInfo field in t.GetFields())
+            var t = typeof(Video);
+            foreach (var field in t.GetFields())
             {
                 field.SetValue(this, field.GetValue(video));
             }
 
-            foreach (PropertyInfo prop in t.GetProperties())
+            foreach (var prop in t.GetProperties())
             {
                 if (!prop.CanWrite)
                 {

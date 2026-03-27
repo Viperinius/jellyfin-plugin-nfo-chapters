@@ -1,12 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MediaBrowser.Common.Configuration;
+using MediaBrowser.Controller.Chapters;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.MediaEncoding;
 using MediaBrowser.Controller.Persistence;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.IO;
@@ -21,12 +17,12 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
     public class PostScanTask : ILibraryPostScanTask
     {
         private readonly ILogger<PostScanTask> _logger;
-        private ILoggerFactory _loggerFactory;
-        private ILibraryManager _libraryManager;
-        private IItemRepository _itemRepository;
-        private IFileSystem _fileSystem;
-        private IDirectoryService _directoryService;
-        private IEncodingManager _encodingManager;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILibraryManager _libraryManager;
+        private readonly IItemRepository _itemRepository;
+        private readonly IFileSystem _fileSystem;
+        private readonly IDirectoryService _directoryService;
+        private readonly IChapterManager _chapterManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostScanTask" /> class.
@@ -37,7 +33,7 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
         /// <param name="itemRepository">Instance of the <see cref="IItemRepository"/> interface.</param>
         /// <param name="fileSystem">Instance of the <see cref="IFileSystem"/> interface.</param>
         /// <param name="directoryService">Instance of the <see cref="IDirectoryService"/> interface.</param>
-        /// <param name="encodingManager">Instance of the <see cref="IEncodingManager"/> interface.</param>
+        /// <param name="chapterManager">Instance of the <see cref="IChapterManager"/> interface.</param>
         public PostScanTask(
             ILogger<PostScanTask> logger,
             ILoggerFactory loggerFactory,
@@ -45,7 +41,7 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
             IItemRepository itemRepository,
             IFileSystem fileSystem,
             IDirectoryService directoryService,
-            IEncodingManager encodingManager)
+            IChapterManager chapterManager)
         {
             _logger = logger;
             _loggerFactory = loggerFactory;
@@ -53,7 +49,7 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
             _itemRepository = itemRepository;
             _fileSystem = fileSystem;
             _directoryService = directoryService;
-            _encodingManager = encodingManager;
+            _chapterManager = chapterManager;
         }
 
         /// <summary>
@@ -64,7 +60,7 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
         /// <returns>Task.</returns>
         public Task Run(IProgress<double> progress, CancellationToken cancellationToken)
         {
-            return new MovieChapterNfoParser(_logger, _loggerFactory, _libraryManager, _itemRepository, _fileSystem, _directoryService, _encodingManager).Run(progress, cancellationToken);
+            return new MovieChapterNfoParser(_logger, _loggerFactory, _libraryManager, _itemRepository, _fileSystem, _directoryService, _chapterManager).Run(progress, cancellationToken);
         }
     }
 }

@@ -2,15 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Jellyfin.Data.Enums;
+using MediaBrowser.Controller.Chapters;
 using MediaBrowser.Controller.Entities;
-using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.MediaEncoding;
-using MediaBrowser.Controller.Persistence;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.IO;
@@ -25,34 +22,30 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
     public class ExtractChapterImagesTask : IScheduledTask
     {
         private readonly ILogger<ExtractChapterImagesTask> _logger;
-        private readonly IEncodingManager _encodingManager;
+        private readonly IChapterManager _chapterManager;
         private readonly ILibraryManager _libraryManager;
         private readonly IDirectoryService _directoryService;
-        private readonly IItemRepository _itemRepository;
         private readonly IFileSystem _fileSystem;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExtractChapterImagesTask"/> class.
         /// </summary>
         /// <param name="logger">Instance of the <see cref="ILogger"/> interface.</param>
-        /// <param name="encodingManager">Instance of the <see cref="IEncodingManager"/> interface.</param>
+        /// <param name="chapterManager">Instance of the <see cref="IChapterManager"/> interface.</param>
         /// <param name="libraryManager">Instance of the <see cref="ILibraryManager"/> interface.</param>
         /// <param name="directoryService">Instance of the <see cref="IDirectoryService"/> interface.</param>
-        /// <param name="itemRepository">Instance of the <see cref="IItemRepository"/> interface.</param>
         /// <param name="fileSystem">Instance of the <see cref="IFileSystem"/> interface.</param>
         public ExtractChapterImagesTask(
             ILogger<ExtractChapterImagesTask> logger,
-            IEncodingManager encodingManager,
+            IChapterManager chapterManager,
             ILibraryManager libraryManager,
             IDirectoryService directoryService,
-            IItemRepository itemRepository,
             IFileSystem fileSystem)
         {
             _logger = logger;
-            _encodingManager = encodingManager;
+            _chapterManager = chapterManager;
             _libraryManager = libraryManager;
             _directoryService = directoryService;
-            _itemRepository = itemRepository;
             _fileSystem = fileSystem;
         }
 
@@ -133,7 +126,7 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
         /// <returns>Task.</returns>
         public async Task RunExtraction(Video video, CancellationToken cancellationToken)
         {
-            var chapters = _itemRepository.GetChapters(video);
+            var chapters = _chapterManager.GetChapters(video.Id);
             var success = await RefreshChapterImages(video, chapters, true, true, cancellationToken).ConfigureAwait(false);
 
             if (!success)
@@ -159,7 +152,7 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
                 return true;
             }
 
-            List<string?> currentChapterImagePaths = new List<string?>(chapters.Select(c => c.ImagePath));
+            var currentChapterImagePaths = new List<string?>(chapters.Select(c => c.ImagePath));
 
             if (Plugin.Instance?.Configuration.ForceReplaceChapterImages ?? false)
             {
@@ -179,15 +172,15 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
                 if (currentInternalChapterImagePaths.Count > 0)
                 {
                     // Clear the file cache of this directory, otherwise bad things happen after just deleting the file
-                    _directoryService.GetFilePaths(GetChapterImagesPath(video), true);
+                    _ = _directoryService.GetFilePaths(GetChapterImagesPath(video), true);
                 }
             }
 
-            var result = await _encodingManager.RefreshChapterImages(video, _directoryService, chapters, extractImages, saveChapters, cancellationToken).ConfigureAwait(false);
+            var result = await _chapterManager.RefreshChapterImages(video, _directoryService, chapters, extractImages, saveChapters, cancellationToken).ConfigureAwait(false);
             if (result)
             {
-                bool changesMade = false;
-                for (int i = 0; i < chapters.Count; i++)
+                var changesMade = false;
+                for (var i = 0; i < chapters.Count; i++)
                 {
                     var chapter = chapters[i];
                     if (chapter == null)
@@ -200,7 +193,7 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
                     {
                         if (!string.IsNullOrEmpty(chapter.ImagePath) && !string.IsNullOrEmpty(oldChapterPath))
                         {
-                            Directory.CreateDirectory(Path.GetDirectoryName(oldChapterPath)!);
+                            _ = Directory.CreateDirectory(Path.GetDirectoryName(oldChapterPath)!);
                             File.Copy(chapter.ImagePath, oldChapterPath, true);
                         }
 
@@ -211,7 +204,7 @@ namespace Viperinius.Plugin.NfoChapters.Tasks
 
                 if (changesMade)
                 {
-                    _itemRepository.SaveChapters(video.Id, chapters);
+                    _chapterManager.SaveChapters(video, chapters);
                     if (Plugin.Instance?.Configuration.EnableVerboseLogging ?? false)
                     {
                         _logger.LogInformation("Chapter changes were made for {Name}", video.Path);

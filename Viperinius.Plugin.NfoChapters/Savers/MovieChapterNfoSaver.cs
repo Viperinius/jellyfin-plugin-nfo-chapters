@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Pipes;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using MediaBrowser.Common.Configuration;
+using MediaBrowser.Controller.Chapters;
 using MediaBrowser.Controller.Configuration;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.TV;
@@ -27,12 +26,12 @@ namespace Viperinius.Plugin.NfoChapters.Savers
     /// </summary>
     public class MovieChapterNfoSaver : IMetadataFileSaver
     {
-        private static readonly string[] _MetadataSavers = new[] { "Nfo" };
+        private static readonly string[] _metadataSavers = new[] { "Nfo" };
         private readonly ILogger<MovieChapterNfoSaver> _logger;
         private readonly IFileSystem _fileSystem;
         private readonly IServerConfigurationManager _configurationManager;
         private readonly IProviderManager _providerManager;
-        private readonly IItemRepository _itemRepository;
+        private readonly IChapterManager _chapterManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MovieChapterNfoSaver"/> class.
@@ -41,19 +40,19 @@ namespace Viperinius.Plugin.NfoChapters.Savers
         /// <param name="fileSystem">Instance of the <see cref="IFileSystem"/> interface.</param>
         /// <param name="configurationManager">Instance of the <see cref="IServerConfigurationManager"/> interface.</param>
         /// <param name="providerManager">Instance of the <see cref="IProviderManager"/> interface.</param>
-        /// <param name="itemRepository">Instance of the <see cref="IItemRepository"/> interface.</param>
+        /// <param name="chapterManager">Instance of the <see cref="IChapterManager"/> interface.</param>
         public MovieChapterNfoSaver(
             ILogger<MovieChapterNfoSaver> logger,
             IFileSystem fileSystem,
             IServerConfigurationManager configurationManager,
             IProviderManager providerManager,
-            IItemRepository itemRepository)
+            IChapterManager chapterManager)
         {
             _logger = logger;
             _fileSystem = fileSystem;
             _configurationManager = configurationManager;
             _providerManager = providerManager;
-            _itemRepository = itemRepository;
+            _chapterManager = chapterManager;
         }
 
         /// <summary>
@@ -157,7 +156,7 @@ namespace Viperinius.Plugin.NfoChapters.Savers
             }
 
             var videoWithChapters = new VideoWithChapters(video);
-            var chapters = _itemRepository.GetChapters(item);
+            var chapters = _chapterManager.GetChapters(item.Id).ToList();
 
             // do not save auto generated dummy chapters
             if (chapters.Count == 0 || Utils.AreDummyChapters(chapters))
@@ -170,7 +169,7 @@ namespace Viperinius.Plugin.NfoChapters.Savers
             if (!_fileSystem.FileExists(path))
             {
                 // try to create it with base nfo saver first
-                await _providerManager.SaveMetadataAsync(item, MinimumUpdateType, _MetadataSavers).ConfigureAwait(false);
+                await _providerManager.SaveMetadataAsync(item, MinimumUpdateType, _metadataSavers).ConfigureAwait(false);
 
                 if (!_fileSystem.FileExists(path))
                 {
@@ -211,7 +210,7 @@ namespace Viperinius.Plugin.NfoChapters.Savers
 
                 if (modifiedServerChapters)
                 {
-                    _itemRepository.SaveChapters(item.Id, chapters);
+                    _chapterManager.SaveChapters(video, chapters);
                 }
             }
 

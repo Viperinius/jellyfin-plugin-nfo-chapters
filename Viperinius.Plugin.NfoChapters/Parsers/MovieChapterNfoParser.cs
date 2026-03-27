@@ -3,16 +3,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using Jellyfin.Data.Enums;
-using MediaBrowser.Common.Configuration;
+using MediaBrowser.Controller.Chapters;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.MediaEncoding;
 using MediaBrowser.Controller.Persistence;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
@@ -39,7 +37,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
         private readonly IItemRepository _itemRepository;
         private readonly IFileSystem _fileSystem;
         private readonly IDirectoryService _directoryService;
-        private readonly IEncodingManager _encodingManager;
+        private readonly IChapterManager _chapterManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MovieChapterNfoParser"/> class.
@@ -50,7 +48,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
         /// <param name="itemRepository">Instance of the <see cref="IItemRepository"/> interface.</param>
         /// <param name="fileSystem">Instance of the <see cref="IFileSystem"/> interface.</param>
         /// <param name="directoryService">Instance of the <see cref="IDirectoryService"/> interface.</param>
-        /// <param name="encodingManager">Instance of the <see cref="IEncodingManager"/> interface.</param>
+        /// <param name="chapterManager">Instance of the <see cref="IChapterManager"/> interface.</param>
         public MovieChapterNfoParser(
             ILogger logger,
             ILoggerFactory loggerFactory,
@@ -58,7 +56,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
             IItemRepository itemRepository,
             IFileSystem fileSystem,
             IDirectoryService directoryService,
-            IEncodingManager encodingManager)
+            IChapterManager chapterManager)
         {
             _logger = logger;
             _loggerFactory = loggerFactory;
@@ -66,7 +64,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
             _itemRepository = itemRepository;
             _fileSystem = fileSystem;
             _directoryService = directoryService;
-            _encodingManager = encodingManager;
+            _chapterManager = chapterManager;
         }
 
         /// <summary>
@@ -115,11 +113,11 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                     var sortedChapters = tmpItem.Item.Chapters.ToList();
                     sortedChapters.Sort((a, b) => a.StartPositionTicks.CompareTo(b.StartPositionTicks));
 
-                    var existingChapters = _itemRepository.GetChapters(movie);
+                    var existingChapters = _chapterManager.GetChapters(movie.Id);
                     if (existingChapters != null && existingChapters.Count > 0)
                     {
                         // Check if the NFO chapters differ from the existing ones
-                        bool chaptersDiffer = false;
+                        var chaptersDiffer = false;
 
                         if (existingChapters.Count != sortedChapters.Count)
                         {
@@ -129,9 +127,9 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                         {
                             foreach (var chapter in sortedChapters)
                             {
-                                if (!existingChapters.Where(c => (c.StartPositionTicks == chapter.StartPositionTicks) &&
-                                                                 (c.Name == chapter.Name) &&
-                                                                 (c.ImagePath == chapter.ImagePath)).Any())
+                                if (!existingChapters.Any(c => (c.StartPositionTicks == chapter.StartPositionTicks) &&
+                                                               (c.Name == chapter.Name) &&
+                                                               (c.ImagePath == chapter.ImagePath)))
                                 {
                                     chaptersDiffer = true;
                                     break;
@@ -145,7 +143,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                         }
                     }
 
-                    _itemRepository.SaveChapters(movie.Id, sortedChapters);
+                    _chapterManager.SaveChapters(movie, sortedChapters);
                 }
                 catch (Exception ex)
                 {
@@ -155,7 +153,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                 // Extract images only if not supposed to be done via scheduled task
                 if ((Plugin.Instance?.Configuration.ExtractChapterImagesToPaths ?? false) && !(Plugin.Instance?.Configuration.ExtractChapterImagesTask ?? false))
                 {
-                    await new Tasks.ExtractChapterImagesTask(_loggerFactory.CreateLogger<Tasks.ExtractChapterImagesTask>(), _encodingManager, _libraryManager, _directoryService, _itemRepository, _fileSystem)
+                    await new Tasks.ExtractChapterImagesTask(_loggerFactory.CreateLogger<Tasks.ExtractChapterImagesTask>(), _chapterManager, _libraryManager, _directoryService, _fileSystem)
                         .RunExtraction(movie, cancellationToken).ConfigureAwait(false);
                 }
 
@@ -238,30 +236,28 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                 return;
             }
 
-            xml = xml.Substring(0, index + 1);
+            xml = xml[..(index + 1)];
 
             // These are not going to be valid xml so no sense in causing the provider to fail and spamming the log with exceptions
             try
             {
-                using (var stringReader = new StringReader(xml))
-                using (var reader = XmlReader.Create(stringReader, GetXmlReaderSettings()))
+                using var stringReader = new StringReader(xml);
+                using var reader = XmlReader.Create(stringReader, GetXmlReaderSettings());
+                reader.MoveToContent();
+                reader.Read();
+
+                // Loop through each element
+                while (!reader.EOF && reader.ReadState == ReadState.Interactive)
                 {
-                    reader.MoveToContent();
-                    reader.Read();
+                    cancellationToken.ThrowIfCancellationRequested();
 
-                    // Loop through each element
-                    while (!reader.EOF && reader.ReadState == ReadState.Interactive)
+                    if (reader.NodeType == XmlNodeType.Element)
                     {
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        if (reader.NodeType == XmlNodeType.Element)
-                        {
-                            FetchDataFromXmlNode(reader, item);
-                        }
-                        else
-                        {
-                            reader.Read();
-                        }
+                        FetchDataFromXmlNode(reader, item);
+                    }
+                    else
+                    {
+                        reader.Read();
                     }
                 }
             }
@@ -284,16 +280,14 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                     {
                         if (!reader.IsEmptyElement)
                         {
-                            using (var subtree = reader.ReadSubtree())
-                            {
-                                var videoWithChapters = itemResult.Item;
+                            using var subtree = reader.ReadSubtree();
+                            var videoWithChapters = itemResult.Item;
 
-                                var chapters = GetChaptersFromXmlNode(subtree);
-                                if (chapters.Count > 0 && videoWithChapters != null)
-                                {
-                                    videoWithChapters.SetChapters(chapters);
-                                    videoWithChapters.HasChapters = true;
-                                }
+                            var chapters = GetChaptersFromXmlNode(subtree);
+                            if (chapters.Count > 0 && videoWithChapters != null)
+                            {
+                                videoWithChapters.SetChapters(chapters);
+                                videoWithChapters.HasChapters = true;
                             }
                         }
                         else
@@ -315,13 +309,15 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
         /// </summary>
         /// <returns>XmlReaderSettings.</returns>
         protected static XmlReaderSettings GetXmlReaderSettings()
-            => new XmlReaderSettings()
+        {
+            return new XmlReaderSettings()
             {
                 ValidationType = ValidationType.None,
                 CheckCharacters = false,
                 IgnoreProcessingInstructions = true,
                 IgnoreComments = true
             };
+        }
 
         /// <summary>
         /// Gets the chapters from XML node.
@@ -330,7 +326,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
         /// <returns>List{ChapterInfo}.</returns>
         private List<ChapterInfo> GetChaptersFromXmlNode(XmlReader reader)
         {
-            List<ChapterInfo> chapters = new List<ChapterInfo>();
+            var chapters = new List<ChapterInfo>();
 
             reader.MoveToContent();
             reader.Read();
@@ -344,7 +340,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                     {
                         case "chapter":
                             {
-                                ChapterInfo chapter = new ChapterInfo();
+                                var chapter = new ChapterInfo();
 
                                 var name = reader.GetAttribute("name");
                                 if (!string.IsNullOrWhiteSpace(name))
