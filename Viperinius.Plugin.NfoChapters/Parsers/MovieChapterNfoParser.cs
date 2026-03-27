@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 using System.Xml;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Common.Configuration;
+using MediaBrowser.Controller.Chapters;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Controller.MediaEncoding;
 using MediaBrowser.Controller.Persistence;
 using MediaBrowser.Controller.Providers;
 using MediaBrowser.Model.Entities;
@@ -39,7 +39,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
         private readonly IItemRepository _itemRepository;
         private readonly IFileSystem _fileSystem;
         private readonly IDirectoryService _directoryService;
-        private readonly IEncodingManager _encodingManager;
+        private readonly IChapterManager _chapterManager;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MovieChapterNfoParser"/> class.
@@ -50,7 +50,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
         /// <param name="itemRepository">Instance of the <see cref="IItemRepository"/> interface.</param>
         /// <param name="fileSystem">Instance of the <see cref="IFileSystem"/> interface.</param>
         /// <param name="directoryService">Instance of the <see cref="IDirectoryService"/> interface.</param>
-        /// <param name="encodingManager">Instance of the <see cref="IEncodingManager"/> interface.</param>
+        /// <param name="chapterManager">Instance of the <see cref="IChapterManager"/> interface.</param>
         public MovieChapterNfoParser(
             ILogger logger,
             ILoggerFactory loggerFactory,
@@ -58,7 +58,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
             IItemRepository itemRepository,
             IFileSystem fileSystem,
             IDirectoryService directoryService,
-            IEncodingManager encodingManager)
+            IChapterManager chapterManager)
         {
             _logger = logger;
             _loggerFactory = loggerFactory;
@@ -66,7 +66,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
             _itemRepository = itemRepository;
             _fileSystem = fileSystem;
             _directoryService = directoryService;
-            _encodingManager = encodingManager;
+            _chapterManager = chapterManager;
         }
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                     var sortedChapters = tmpItem.Item.Chapters.ToList();
                     sortedChapters.Sort((a, b) => a.StartPositionTicks.CompareTo(b.StartPositionTicks));
 
-                    var existingChapters = _itemRepository.GetChapters(movie);
+                    var existingChapters = _chapterManager.GetChapters(movie.Id);
                     if (existingChapters != null && existingChapters.Count > 0)
                     {
                         // Check if the NFO chapters differ from the existing ones
@@ -145,7 +145,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                         }
                     }
 
-                    _itemRepository.SaveChapters(movie.Id, sortedChapters);
+                    _chapterManager.SaveChapters(movie, sortedChapters);
                 }
                 catch (Exception ex)
                 {
@@ -155,7 +155,7 @@ namespace Viperinius.Plugin.NfoChapters.Parsers
                 // Extract images only if not supposed to be done via scheduled task
                 if ((Plugin.Instance?.Configuration.ExtractChapterImagesToPaths ?? false) && !(Plugin.Instance?.Configuration.ExtractChapterImagesTask ?? false))
                 {
-                    await new Tasks.ExtractChapterImagesTask(_loggerFactory.CreateLogger<Tasks.ExtractChapterImagesTask>(), _encodingManager, _libraryManager, _directoryService, _itemRepository, _fileSystem)
+                    await new Tasks.ExtractChapterImagesTask(_loggerFactory.CreateLogger<Tasks.ExtractChapterImagesTask>(), _chapterManager, _libraryManager, _directoryService, _fileSystem)
                         .RunExtraction(movie, cancellationToken).ConfigureAwait(false);
                 }
 
